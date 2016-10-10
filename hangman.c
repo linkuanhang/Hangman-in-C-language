@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <math.h>
 #include <limits.h>
@@ -15,27 +16,36 @@
 #include <GL/glu.h>
 #include <GL/glut.h>
 
-/* global variable declaration */
-const unsigned int MAX_WRONG = 7;
+/* global variables declaration */
+const unsigned short int MAX_WRONG = 7;
+const char MASK_CHAR = '_';
+const char* WRONG_SEP = ", ";
 
-/* global function declaration */
+/* global functions declaration */
+/** word preprocessing functions **/
 unsigned long long int count_lines(FILE*);
 unsigned long long int rand_num(unsigned long long int);
 char* get_line(unsigned long long int , FILE*);
 char** get_word(const char*, const char*);
 char* lower_word(const char*);
-char* inser_word(const char*, const char*);
+char* insert_word(const char*, const char*);
 char* mask_word(const char*, char);
-
+/** guess functions **/
+bool check_input(char);
+char get_input(char);
+bool check_guess(const char*, const char*, char);
+void make_guess(const char*, char*, char*, char);
+bool check_continue(const char*, const char*, const char*);
 
 int main(int argc, char** argv)
 {
     char* filePath;
     char* line, * spLine;
-    char** wordStr, * word, * wordDes, * lowWord, * inserWord, * maskWord;
-    char wrongChar[MAX_WRONG + 1];
-    unsigned long long int lineNum, lineIdx;
+    char** wordStr, * word, * wordDes, * lowWord, * insertWord, * maskWord;
+    char wrongChar[MAX_WRONG + 1], input;
+    unsigned long long int lineNum, lineIdx, i;
     FILE* wordDb;
+    bool check;
     
     srand(time(NULL));
     
@@ -59,18 +69,41 @@ int main(int argc, char** argv)
     lowWord = lower_word(word);
     printf("Word: |%s|\n", lowWord);
     
-    inserWord = inser_word(lowWord, " ");
-    printf("Word: |%s|\n", inserWord);
+    insertWord = insert_word(lowWord, " ");
+    printf("Word: |%s|\n", insertWord);
     
-    maskWord = mask_word(inserWord,'_');
+    maskWord = mask_word(insertWord,MASK_CHAR);
     printf("Word: |%s|\n", maskWord);
     
+    wrongChar[0] = '\0';
+    
+    // Test
+    while (input != '\\' & check_continue(insertWord, maskWord, wrongChar))
+    {
+        scanf("\n%c", &input);
+        check = check_input(input);
+        if (check == true)
+        {
+            input = get_input(input);
+            check = check_guess(wrongChar, maskWord, input);
+            if (check == false)
+            {
+                make_guess(insertWord, maskWord, wrongChar, input);
+            }
+        }
+
+        printf("==========\n");
+        printf("Input: |%c|\n", input);
+        printf("Word: |%s|, |%s|\n", maskWord, lowWord);
+        printf("Wrong: |%s|\n", insert_word(wrongChar, WRONG_SEP));
+        printf("==========\n");
+    }
+    
     free(line);
-    free(word);
-    //free(wordDes);
+    free(wordStr[0]);
     free(wordStr);
     free(lowWord);
-    free(inserWord);
+    free(insertWord);
     free(maskWord);
     fclose(wordDb);
     return 0;
@@ -198,14 +231,20 @@ char* lower_word(const char* word)
     return newWord;
 }
 
-char* inser_word(const char* word, const char* inser)
+char* insert_word(const char* word, const char* insert)
 {
     unsigned long long int i, lenWord, lenInsert, len;
     char* newWord;
     
     lenWord = strlen(word);
-    lenInsert = strlen(inser) + 1;
+    lenInsert = strlen(insert) + 1;
     len = (lenWord - 1) * lenInsert + 1;
+    
+    if (lenWord == 0)
+    {
+        return "";
+    }
+    
     newWord =  (char*)malloc((len + 1) * sizeof(char));
     
     for (i = 0; i < len; i++)
@@ -216,7 +255,7 @@ char* inser_word(const char* word, const char* inser)
         }
         else
         {
-            newWord[i] = inser[(i % lenInsert) - 1];
+            newWord[i] = insert[(i % lenInsert) - 1];
         }
     }
     newWord[len] = '\0';
@@ -246,6 +285,98 @@ char* mask_word(const char* word, char mask)
     
     return newWord;
 }
+
+bool check_input(char input)
+{
+    bool res;
+    res = isalpha(tolower(input));
+    return res;
+}
+
+char get_input(char input)
+{
+    char res;
+    res = tolower(input);
+    return res;
+}
+
+bool check_guess(const char* wrong, const char* mask, char guess)
+{
+    unsigned long long int len, i;
+    
+    len = strlen(wrong);
+    
+    for (i = 0; i < len; i++)
+    {
+        if (wrong[i] == guess)
+        {
+            return true;
+        }
+    }
+    
+    len = strlen(mask);
+    
+    for (i = 0; i < len; i++)
+    {
+        if (mask[i] == guess)
+        {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+void make_guess(const char* word, char* mask, char* wrong, char guess)
+{
+    unsigned long long int len, i;
+    char guessStr[2];
+    bool match;
+    
+    len = strlen(word);
+    match = false;
+    guessStr[0] = guess;
+    guessStr[1] = '\0';
+    
+    for (i = 0; i <len; i++)
+    {
+        if (word[i] == guess)
+        {
+            mask[i] = word[i];
+            match = true;
+        }
+    }
+    
+    if (match == false)
+    {
+        wrong = strcat(wrong, guessStr);
+    }
+}
+
+bool check_continue(const char* word, const char* mask, const char* wrong)
+{
+    bool res;
+    
+    if ((strcmp(word, mask) == 0) || (strlen(wrong) == MAX_WRONG))
+    {
+        res = false;
+    }
+    else
+    {
+        res = true;
+    }
+    
+    return res;
+}
+
+
+
+
+
+
+
+
+
 
 
 
