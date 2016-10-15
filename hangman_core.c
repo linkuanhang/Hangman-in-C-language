@@ -8,13 +8,9 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-#include <math.h>
 #include <limits.h>
 #include <time.h>
 #include <ctype.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <GL/glut.h>
 
 /* global variables declaration */
 const unsigned short int MAX_WRONG = 7;
@@ -35,9 +31,10 @@ bool check_input(char);
 char get_input(char);
 bool check_guess(const char*, const char*, char);
 void make_guess(const char*, char*, char*, char);
-bool check_continue(const char*, const char*, const char*);
+bool check_win(const char*, const char*);
+bool check_lose(const char*);
 
-int main(int argc, char** argv)
+int main_test(int argc, char** argv)
 {
     char* filePath;
     char* line, * spLine;
@@ -57,7 +54,6 @@ int main(int argc, char** argv)
     lineIdx = rand_num(lineNum);
     printf("Line index: |%llu|\n", lineIdx);
     
-    lineIdx = 0;
     line = get_line(lineIdx, wordDb);
     printf("Line: |%s|\n", line);
     
@@ -77,8 +73,8 @@ int main(int argc, char** argv)
     
     wrongChar[0] = '\0';
     
-    // Test
-    while (input != '\\' & check_continue(insertWord, maskWord, wrongChar))
+    while (input != '\\' && !check_win(insertWord, maskWord) && \
+            !check_lose(wrongChar))
     {
         scanf("\n%c", &input);
         check = check_input(input);
@@ -98,6 +94,17 @@ int main(int argc, char** argv)
         printf("Wrong: |%s|\n", insert_word(wrongChar, WRONG_SEP));
         printf("==========\n");
     }
+    
+    if(check_win(insertWord, maskWord) == true)
+    {
+        printf("You win!!!\n");
+    }
+    else
+    {
+        printf("You lose!!!\n");
+    }
+    
+    printf("End.\n");
     
     free(line);
     free(wordStr[0]);
@@ -353,37 +360,34 @@ void make_guess(const char* word, char* mask, char* wrong, char guess)
     }
 }
 
-bool check_continue(const char* word, const char* mask, const char* wrong)
+bool check_win(const char* word, const char* mask)
 {
     bool res;
     
-    if ((strcmp(word, mask) == 0) || (strlen(wrong) == MAX_WRONG))
+    if (strcmp(word, mask) == 0)
     {
-        res = false;
+        res = true;
     }
     else
     {
-        res = true;
+        res = false;
     }
     
     return res;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+bool check_lose(const char* wrong)
+{
+    bool res;
+    
+    if (strlen(wrong) == MAX_WRONG)
+    {
+        res = true;
+    }
+    else
+    {
+        res = false;
+    }
+    
+    return res;
+}
