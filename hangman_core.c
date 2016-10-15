@@ -46,7 +46,7 @@ int main_test(int argc, char** argv)
     
     srand(time(NULL));
     
-    filePath = "test.txt";
+    filePath = "words.txt";
     wordDb = fopen(filePath, "r");
     lineNum = count_lines(wordDb);
     printf("Total lines: |%llu|\n", lineNum);
